@@ -11,6 +11,7 @@ import (
 type responseWriterWrap struct {
 	http.ResponseWriter
 	statusCode int
+	statusDesc string
 }
 
 func Logging(next http.Handler) http.Handler {
@@ -18,10 +19,11 @@ func Logging(next http.Handler) http.Handler {
 		responseWrap := responseWriterWrap{
 			ResponseWriter: w,
 			statusCode: http.StatusOK,
+			statusDesc: http.StatusText(http.StatusOK),
 		}
 		start := time.Now()
 		next.ServeHTTP(responseWrap, r)
-		log.Info().Msg(fmt.Sprintf("%d %s %s %d", responseWrap.statusCode, r.Method, r.URL.Path, time.Since(start)))
+		log.Info().Msg(fmt.Sprintf("%d %s %s %s %d", responseWrap.statusCode, responseWrap.statusDesc, r.Method, r.URL.Path, time.Since(start)))
 		// fmt.Printf("%s %s %d", r.Method, r.URL.Path, time.Since(start))
 	})
 }
