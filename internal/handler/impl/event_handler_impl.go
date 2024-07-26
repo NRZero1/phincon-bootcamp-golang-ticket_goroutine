@@ -37,7 +37,7 @@ func (h EventHandler) Save(responseWriter http.ResponseWriter, request *http.Req
 			Message: err.Error(),
 			RequestCreated: time.Now().Format("2006-01-02 15:04:05"),
 			ProcessTime: time.Duration(time.Since(time.Now()).Milliseconds()),
-			Data: dto.EventResponse {},
+			Data: "",
 		}
 
 		responseWriter.Header().Set("Content-Type", "application/json")
@@ -89,7 +89,7 @@ func (h EventHandler) Save(responseWriter http.ResponseWriter, request *http.Req
 			Message: errSave.Error(),
 			RequestCreated: time.Now().Format("2006-01-02 15:04:05"),
 			ProcessTime: time.Duration(time.Since(time.Now()).Milliseconds()),
-			Data: dto.EventResponse {},
+			Data: "",
 		}
 
 		json.NewEncoder(responseWriter).Encode(response)
@@ -123,7 +123,7 @@ func (h EventHandler) FindById(responseWriter http.ResponseWriter, request *http
 			Message: errConv.Error(),
 			RequestCreated: time.Now().Format("2006-01-02 15:04:05"),
 			ProcessTime: time.Duration(time.Since(time.Now()).Milliseconds()),
-			Data: dto.EventResponse {},
+			Data: "",
 		}
 
 		responseWriter.Header().Set("Content-Type", "application/json")
@@ -142,7 +142,7 @@ func (h EventHandler) FindById(responseWriter http.ResponseWriter, request *http
 			Message: errFound.Error(),
 			RequestCreated: time.Now().Format("2006-01-02 15:04:05"),
 			ProcessTime: time.Duration(time.Since(time.Now()).Milliseconds()),
-			Data: dto.EventResponse {},
+			Data: "",
 		}
 
 		responseWriter.Header().Set("Content-Type", "application/json")
