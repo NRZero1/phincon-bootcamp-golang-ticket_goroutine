@@ -35,7 +35,7 @@ func (h EventHandler) Save(responseWriter http.ResponseWriter, request *http.Req
 			StatusCode: http.StatusBadRequest,
 			StatusDesc: http.StatusText(http.StatusBadRequest),
 			Message: err.Error(),
-			RequestCreated: time.Now().Format("2024-02-01 17:14:05"),
+			RequestCreated: time.Now().Format("2006-01-02 15:04:05"),
 			ProcessTime: time.Duration(time.Since(time.Now()).Milliseconds()),
 			Data: dto.EventResponse {},
 		}
@@ -68,7 +68,7 @@ func (h EventHandler) Save(responseWriter http.ResponseWriter, request *http.Req
 			StatusCode: http.StatusBadRequest,
 			StatusDesc: http.StatusText(http.StatusBadRequest),
 			Message: "Failed to save Event because didn't pass the validation",
-			RequestCreated: time.Now().Format("2024-02-01 17:14:05"),
+			RequestCreated: time.Now().Format("2006-01-02 15:04:05"),
 			ProcessTime: time.Duration(time.Since(time.Now()).Milliseconds()),
 			Data: errors,
 		}
@@ -87,7 +87,7 @@ func (h EventHandler) Save(responseWriter http.ResponseWriter, request *http.Req
 			StatusCode: http.StatusBadRequest,
 			StatusDesc: http.StatusText(http.StatusBadRequest),
 			Message: errSave.Error(),
-			RequestCreated: time.Now().Format("2024-02-01 17:14:05"),
+			RequestCreated: time.Now().Format("2006-01-02 15:04:05"),
 			ProcessTime: time.Duration(time.Since(time.Now()).Milliseconds()),
 			Data: dto.EventResponse {},
 		}
@@ -103,7 +103,7 @@ func (h EventHandler) Save(responseWriter http.ResponseWriter, request *http.Req
 		StatusCode: http.StatusCreated,
 		StatusDesc: http.StatusText(http.StatusCreated),
 		Message: "Created",
-		RequestCreated: time.Now().Format("2024-02-01 17:14:05"),
+		RequestCreated: time.Now().Format("2006-01-02 15:04:05"),
 		ProcessTime: time.Duration(time.Since(time.Now()).Milliseconds()),
 		Data: savedEvent,
 	}
@@ -121,7 +121,7 @@ func (h EventHandler) FindById(responseWriter http.ResponseWriter, request *http
 			StatusCode: http.StatusBadRequest,
 			StatusDesc: http.StatusText(http.StatusBadRequest),
 			Message: errConv.Error(),
-			RequestCreated: time.Now().Format("2024-02-01 17:14:05"),
+			RequestCreated: time.Now().Format("2006-01-02 15:04:05"),
 			ProcessTime: time.Duration(time.Since(time.Now()).Milliseconds()),
 			Data: dto.EventResponse {},
 		}
@@ -140,7 +140,7 @@ func (h EventHandler) FindById(responseWriter http.ResponseWriter, request *http
 			StatusCode: http.StatusBadRequest,
 			StatusDesc: http.StatusText(http.StatusBadRequest),
 			Message: errFound.Error(),
-			RequestCreated: time.Now().Format("2024-02-01 17:14:05"),
+			RequestCreated: time.Now().Format("2006-01-02 15:04:05"),
 			ProcessTime: time.Duration(time.Since(time.Now()).Milliseconds()),
 			Data: dto.EventResponse {},
 		}
@@ -156,7 +156,7 @@ func (h EventHandler) FindById(responseWriter http.ResponseWriter, request *http
 		StatusCode: http.StatusOK,
 		StatusDesc: http.StatusText(http.StatusOK),
 		Message: "OK",
-		RequestCreated: time.Now().Format("2024-02-01 17:14:05"),
+		RequestCreated: time.Now().Format("2006-01-02 15:04:05"),
 		ProcessTime: time.Duration(time.Since(time.Now()).Milliseconds()),
 		Data: foundEvent,
 	}
@@ -171,7 +171,7 @@ func (h EventHandler) GetAll(responseWriter http.ResponseWriter, request *http.R
 		StatusCode: http.StatusOK,
 		StatusDesc: http.StatusText(http.StatusOK),
 		Message: "OK",
-		RequestCreated: time.Now().Format("2024-02-01 17:14:05"),
+		RequestCreated: time.Now().Format("2006-01-02 15:04:05"),
 		ProcessTime: time.Duration(time.Since(time.Now()).Milliseconds()),
 		Data: h.usecase.GetAll(),
 	}
