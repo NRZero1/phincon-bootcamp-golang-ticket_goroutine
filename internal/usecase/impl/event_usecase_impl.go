@@ -1,9 +1,12 @@
 package impl
 
 import (
+	"context"
 	"ticket_goroutine/internal/domain"
 	"ticket_goroutine/internal/repository"
 	"ticket_goroutine/internal/usecase"
+
+	"github.com/rs/zerolog/log"
 )
 
 type EventUseCase struct {
@@ -16,14 +19,17 @@ func NewEventUseCase(repo repository.EventRepositoryInterface) (usecase.EventUse
 	}
 }
 
-func (uc EventUseCase) Save(event domain.Event) (domain.Event, error) {
-	return uc.repo.Save(&event)
+func (uc EventUseCase) Save(ctx context.Context, event domain.Event) (domain.Event, error) {
+	log.Trace().Msg("Entering event usecase save")
+	return uc.repo.Save(ctx, &event)
 }
 
-func (uc EventUseCase) FindById(id int) (domain.Event, error) {
-	return uc.repo.FindByID(id)
+func (uc EventUseCase) FindById(ctx context.Context, id int) (domain.Event, error) {
+	log.Trace().Msg("Entering event usecase find by id")
+	return uc.repo.FindByID(ctx, id)
 }
 
-func (uc EventUseCase) GetAll() ([]domain.Event) {
-	return uc.repo.GetAll()
+func (uc EventUseCase) GetAll(ctx context.Context) ([]domain.Event, error) {
+	log.Trace().Msg("Entering event usecase get all")
+	return uc.repo.GetAll(ctx)
 }

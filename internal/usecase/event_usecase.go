@@ -1,6 +1,9 @@
 package usecase
 
-import "ticket_goroutine/internal/domain"
+import (
+	"context"
+	"ticket_goroutine/internal/domain"
+)
 
 type EventUseCaseInterface interface {
 	EventSave
@@ -9,13 +12,13 @@ type EventUseCaseInterface interface {
 }
 
 type EventSave interface {
-	Save(event domain.Event) (domain.Event, error)
+	Save(context context.Context, event domain.Event) (domain.Event, error)
 }
 
 type EventFindById interface {
-	FindById(id int) (domain.Event, error)
+	FindById(context context.Context, id int) (domain.Event, error)
 }
 
 type EventGetAll interface {
-	GetAll() ([]domain.Event)
+	GetAll(context context.Context) ([]domain.Event, error)
 }
