@@ -23,10 +23,9 @@ type TicketHandler struct {
 	usecaseEvent usecase.EventUseCaseInterface
 }
 
-func NewTicketHandler(usecaseTicket usecase.TicketUseCaseInterface, usecaseEvent usecase.EventUseCaseInterface) (handler.TicketHandlerInterface) {
+func NewTicketHandler(usecaseTicket usecase.TicketUseCaseInterface) (handler.TicketHandlerInterface) {
 	return TicketHandler {
 		usecaseTicket: usecaseTicket,
-		usecaseEvent: usecaseEvent,
 	}
 }
 
@@ -155,47 +154,13 @@ func (h TicketHandler) Save(responseWriter http.ResponseWriter, request *http.Re
 		responseWriter.Header().Set("Content-Type", "application/json")
 		responseWriter.WriteHeader(http.StatusCreated)
 
-		foundEvent, errEvent := h.usecaseEvent.FindById(ctx, ticket.EventID)
-
-		if errEvent != nil {
-			response := dto.GlobalResponse {
-				StatusCode: http.StatusCreated,
-				StatusDesc: http.StatusText(http.StatusCreated),
-				Message: "Save successful but timed out when fetching event details for response",
-				RequestCreated: time.Now().Format("2006-01-02 15:04:05"),
-				ProcessTime: time.Duration(time.Since(time.Now()).Milliseconds()),
-				Data: dto.TicketResponse {
-					TicketID: savedTicket.TicketID,
-					EventDetails: dto.EventResponse{
-					},
-					Name: savedTicket.Name,
-					Price: savedTicket.Price,
-					Stock: savedTicket.Stock,
-					Type: savedTicket.Type,
-				},
-			}
-			log.Info().Msg("Ticket created successfully but event details is timed out, returning json")
-			json.NewEncoder(responseWriter).Encode(response)
-			return
-		}
-
 		response := dto.GlobalResponse {
 			StatusCode: http.StatusCreated,
 			StatusDesc: http.StatusText(http.StatusCreated),
 			Message: "Created",
 			RequestCreated: time.Now().Format("2006-01-02 15:04:05"),
 			ProcessTime: time.Duration(time.Since(time.Now()).Milliseconds()),
-			Data: dto.TicketResponse {
-				TicketID: savedTicket.TicketID,
-				EventDetails: dto.EventResponse{
-					EventID: foundEvent.EventID,
-					EventName: foundEvent.EventName,
-				},
-				Name: savedTicket.Name,
-				Price: savedTicket.Price,
-				Stock: savedTicket.Stock,
-				Type: savedTicket.Type,
-			},
+			Data: savedTicket,
 		}
 
 		log.Info().Msg("Ticket created successfully and returning json")
@@ -301,31 +266,8 @@ func (h TicketHandler) FindById(responseWriter http.ResponseWriter, request *htt
 			return
 		}
 
-		foundEvent, errEvent := h.usecaseEvent.FindById(ctx, foundTicket.EventID)
-
 		responseWriter.Header().Set("Content-Type", "application/json")
 		responseWriter.WriteHeader(http.StatusOK)
-
-		if errEvent != nil {
-			response := dto.GlobalResponse {
-				StatusCode: http.StatusOK,
-				StatusDesc: http.StatusText(http.StatusOK),
-				Message: "Ticket found but timed out when fetching event details",
-				RequestCreated: time.Now().Format("2006-01-02 15:04:05"),
-				ProcessTime: time.Duration(time.Since(time.Now()).Milliseconds()),
-				Data: dto.TicketResponse {
-					TicketID: foundTicket.TicketID,
-					EventDetails: dto.EventResponse{},
-					Name: foundTicket.Name,
-					Price: foundTicket.Price,
-					Stock: foundTicket.Stock,
-					Type: foundTicket.Type,
-				},
-			}
-			log.Info().Msg("Ticket fetched partialy and returning json")
-			json.NewEncoder(responseWriter).Encode(response)
-			return
-		}
 
 		response := dto.GlobalResponse {
 			StatusCode: http.StatusOK,
@@ -333,17 +275,7 @@ func (h TicketHandler) FindById(responseWriter http.ResponseWriter, request *htt
 			Message: "OK",
 			RequestCreated: time.Now().Format("2006-01-02 15:04:05"),
 			ProcessTime: time.Duration(time.Since(time.Now()).Milliseconds()),
-			Data: dto.TicketResponse{
-				TicketID: foundTicket.TicketID,
-				EventDetails: dto.EventResponse{
-					EventID: foundEvent.EventID,
-					EventName: foundEvent.EventName,
-				},
-				Name: foundTicket.Name,
-				Price: foundTicket.Price,
-				Stock: foundTicket.Stock,
-				Type: foundTicket.Type,
-			},
+			Data: foundTicket,
 		}
 		log.Info().Msg("Ticket fetched successfully and returning json")
 		json.NewEncoder(responseWriter).Encode(response)
@@ -403,39 +335,13 @@ func (h TicketHandler) GetAll(responseWriter http.ResponseWriter, request *http.
 			return
 		}
 		
-		var ticketResponseList []dto.TicketResponse
-		
-		for _, v := range allTickets {
-			ticketEvent, errTicketEvent := h.usecaseEvent.FindById(ctx, v.EventID)
-			var eventDetail dto.EventResponse
-
-			if errTicketEvent != nil {
-				eventDetail = dto.EventResponse{}
-			} else {
-				eventDetail = dto.EventResponse {
-					EventID: ticketEvent.EventID,
-					EventName: ticketEvent.EventName,
-				}
-			}
-
-			ticketResponse := dto.TicketResponse {
-				TicketID: v.TicketID,
-				EventDetails: eventDetail,
-				Name: v.Name,
-				Price: v.Price,
-				Stock: v.Stock,
-				Type: v.Type,
-			}
-			ticketResponseList = append(ticketResponseList, ticketResponse)
-		}
-		
 		response := dto.GlobalResponse {
 			StatusCode: http.StatusOK,
 			StatusDesc: http.StatusText(http.StatusOK),
 			Message: "OK",
 			RequestCreated: time.Now().Format("2006-01-02 15:04:05"),
 			ProcessTime: time.Duration(time.Since(time.Now()).Milliseconds()),
-			Data: ticketResponseList,
+			Data: allTickets,
 		}
 
 		responseWriter.Header().Set("Content-Type", "application/json")
