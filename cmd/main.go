@@ -11,6 +11,7 @@ import (
 )
 
 var eventHandler handler.EventHandlerInterface
+var userHandler handler.UserHandlerInterface
 
 func initEventHandler() handler.EventHandlerInterface {
 	repo := repoImplement.NewEventRepository()
@@ -19,8 +20,16 @@ func initEventHandler() handler.EventHandlerInterface {
 	return handler
 }
 
+func initUserHandler() handler.UserHandlerInterface {
+	repo := repoImplement.NewUserRepository()
+	usecase := useCaseImplement.NewUserUseCase(repo)
+	handler := handlerImplement.NewUserHandler(usecase)
+	return handler
+}
+
 func init() {
 	eventHandler = initEventHandler()
+	userHandler = initUserHandler()
 }
 
 func main() {
@@ -29,6 +38,10 @@ func main() {
 	router.AddRoute("GET", "/event/", eventHandler.GetAll)
 	router.AddRoute("GET", "/event/{id}", eventHandler.FindById)
 	router.AddRoute("POST", "/event/", eventHandler.Save)
+
+	router.AddRoute("GET", "/user/", userHandler.GetAll)
+	router.AddRoute("GET", "/user/{id}", userHandler.FindById)
+	router.AddRoute("POST", "/user/", userHandler.Save)
 
 	middlewares := middleware.CreateStack(
 		middleware.Logging,
