@@ -99,7 +99,7 @@ func (h UserHandler) Save(responseWriter http.ResponseWriter, request *http.Requ
 		Str("Email: ", user.Email).
 		Str("Name: ", user.Name).
 		Str("Phone Number: ", user.PhoneNumber).
-		Int64("Balance: ", user.Balance).
+		Float64("Balance: ", user.Balance).
 		Msg("Continuing user save process")
 
 	done := make(chan struct{})

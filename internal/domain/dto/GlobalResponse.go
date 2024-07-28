@@ -10,14 +10,3 @@ type GlobalResponse struct {
 	ProcessTime time.Duration
 	Data           interface{}
 }
-
-func NewGlobalResponse(globalResponse GlobalResponse) GlobalResponse {
-	return GlobalResponse{
-		StatusCode: globalResponse.StatusCode,
-		StatusDesc: globalResponse.StatusDesc,
-		Message:    globalResponse.Message,
-		RequestCreated: globalResponse.RequestCreated,
-		ProcessTime: globalResponse.ProcessTime,
-		Data:       globalResponse.Data,
-	}
-}
