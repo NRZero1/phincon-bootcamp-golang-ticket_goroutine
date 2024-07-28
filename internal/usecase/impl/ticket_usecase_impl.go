@@ -2,6 +2,8 @@ package impl
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"ticket_goroutine/internal/domain"
 	"ticket_goroutine/internal/domain/dto"
 	"ticket_goroutine/internal/repository"
@@ -12,20 +14,26 @@ import (
 
 type TicketUseCase struct {
 	repoTicket repository.TicketRepositoryInterface
-	repoEvent repository.EventRepositoryInterface
+	useCaseEvent usecase.EventUseCaseInterface
 }
 
-func NewTicketUseCase(repoTicket repository.TicketRepositoryInterface, repoEvent repository.EventRepositoryInterface) (usecase.TicketUseCaseInterface) {
+func NewTicketUseCase(repoTicket repository.TicketRepositoryInterface, ucEvent usecase.EventUseCaseInterface) (usecase.TicketUseCaseInterface) {
 	return TicketUseCase{
 		repoTicket: repoTicket,
-		repoEvent: repoEvent,
+		useCaseEvent: ucEvent,
 	}
 }
 
 func (uc TicketUseCase) Save(ctx context.Context, ticket domain.Ticket) (dto.TicketResponse, error) {
 	log.Trace().Msg("Entering ticket usecase save")
 	log.Info().Msg("Attempting to check event if exist")
-	foundEvent, errEvent := uc.repoEvent.FindByID(ctx, ticket.EventID)
+
+	if uc.useCaseEvent == nil {
+        log.Error().Msg("useCaseEvent is nil")
+        return dto.TicketResponse{}, errors.New("useCaseEvent is not initialized")
+    }
+
+	foundEvent, errEvent := uc.useCaseEvent.FindById(ctx, ticket.EventID)
 
 	if errEvent != nil {
 		return dto.TicketResponse{}, errEvent
@@ -62,7 +70,7 @@ func (uc TicketUseCase) FindById(ctx context.Context, id int) (dto.TicketRespons
 	}
 	
 	log.Info().Msg("Attempting to call event repo to check if event exist")
-	foundEvent, errEvent := uc.repoEvent.FindByID(ctx, foundTicket.EventID)
+	foundEvent, errEvent := uc.useCaseEvent.FindById(ctx, foundTicket.EventID)
 
 	if errEvent != nil {
 		return dto.TicketResponse{}, errEvent
@@ -94,7 +102,7 @@ func (uc TicketUseCase) GetAll(ctx context.Context) ([]dto.TicketResponse, error
 	var listOfTicketResponse []dto.TicketResponse
 
 	for _, v := range listOfTicket {
-		foundEvent, err := uc.repoEvent.FindByID(ctx, v.EventID)
+		foundEvent, err := uc.useCaseEvent.FindById(ctx, v.EventID)
 
 		if err != nil {
 			return []dto.TicketResponse{}, err
@@ -115,4 +123,22 @@ func (uc TicketUseCase) GetAll(ctx context.Context) ([]dto.TicketResponse, error
 		listOfTicketResponse = append(listOfTicketResponse, ticketResponse)
 	}
 	return listOfTicketResponse, nil
+}
+
+func (uc TicketUseCase) Deduct(ctx context.Context, id int, amount int) (domain.Ticket, error) {
+	log.Trace().Msg("Entering ticket usecase deduct")
+	log.Info().Msg("Attempting to call ticket repo to deduct stock")
+	ticket, errTicket := uc.repoTicket.Deduct(ctx, id, amount)
+
+	if errTicket != nil {
+		return domain.Ticket{}, fmt.Errorf("")
+	}
+
+	return ticket, nil
+}
+
+func (uc TicketUseCase) Restore(ctx context.Context, id int, amount int) {
+	log.Trace().Msg("Entering ticket usecase restore")
+	log.Info().Msg("Attempting to call ticket repo to restore stock")
+	uc.repoTicket.Restore(ctx, id, amount)
 }

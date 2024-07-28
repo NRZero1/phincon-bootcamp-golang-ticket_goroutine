@@ -1,10 +1,18 @@
 package dto
 
 type TicketResponse struct {
-	TicketID     int `json:"TicketID" validate:"required,number,gt=0"`
+	TicketID     int
 	EventDetails EventResponse
-	Name         string  `json:"Name" validate:"required"`
-	Price        float64 `json:"Price" validate:"required,number,gt=0"`
-	Stock        int     `json:"Stock" validate:"required,number,gt=0"`
-	Type         string  `json:"Type" validate:"required"`
+	Name         string
+	Price        float64
+	Stock        int
+	Type         string
+}
+
+type TicketResponseTicketOrder struct {
+	TicketID     int
+	EventDetails EventResponse
+	Name         string
+	Price        float64
+	Type         string
 }

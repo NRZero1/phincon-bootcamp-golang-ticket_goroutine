@@ -33,3 +33,8 @@ func (uc UserUseCase) GetAll(ctx context.Context) ([]domain.User, error) {
 	log.Trace().Msg("Entering user usecase get all")
 	return uc.repo.GetAll(ctx)
 }
+
+func (uc UserUseCase) ReduceBalance(ctx context.Context, id int, amount float64) (domain.User, error) {
+	log.Trace().Msg("Entering user usecase reduce balance")
+	return uc.repo.ReduceBalance(ctx, id, amount)
+}

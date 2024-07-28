@@ -16,8 +16,26 @@ type EventRepository struct {
 }
 
 func NewEventRepository() repository.EventRepositoryInterface {
-	return &EventRepository {
+	repo := &EventRepository {
 		events: map[int]domain.Event{},
+	}
+
+	repo.initData()
+	return repo
+}
+
+func (repo *EventRepository) initData() {
+	repo.mtx.Lock()
+    defer repo.mtx.Unlock()
+
+	repo.events[1] = domain.Event{
+		EventID: 1,
+		EventName: "Test Event 1",
+	}
+
+	repo.events[2] = domain.Event{
+		EventID: 2,
+		EventName: "Test Event 2",
 	}
 }
 
