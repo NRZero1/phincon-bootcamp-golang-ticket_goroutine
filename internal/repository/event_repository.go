@@ -12,7 +12,7 @@ type EventRepositoryInterface interface {
 }
 
 type EventSave interface {
-	Save(context context.Context, event *domain.Event) (domain.Event, error)
+	Save(context context.Context, event *domain.Event) (error)
 }
 
 type EventFindById interface {
