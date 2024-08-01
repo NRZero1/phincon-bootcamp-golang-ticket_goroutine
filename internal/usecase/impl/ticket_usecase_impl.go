@@ -40,22 +40,22 @@ func (uc TicketUseCase) Save(ctx context.Context, ticket domain.Ticket) (dto.Tic
 	}
 
 	log.Info().Msg("Attempting to call ticket repo save")
-	savedTicket, errSaved := uc.repoTicket.Save(ctx, &ticket)
+	errSaved := uc.repoTicket.Save(ctx, &ticket)
 
 	if errSaved != nil {
 		return dto.TicketResponse{}, errSaved
 	}
 
 	ticketResponse := dto.TicketResponse {
-		TicketID: savedTicket.TicketID,
+		TicketID: ticket.TicketID,
 		EventDetails: dto.EventResponse{
 			EventID: foundEvent.EventID,
 			EventName: foundEvent.EventName,
 		},
-		Name: savedTicket.Name,
-		Price: savedTicket.Price,
-		Stock: savedTicket.Stock,
-		Type: savedTicket.Type,
+		Name: ticket.Name,
+		Price: ticket.Price,
+		Stock: ticket.Stock,
+		Type: ticket.Type,
 	}
 	return ticketResponse, nil
 }
@@ -137,8 +137,8 @@ func (uc TicketUseCase) Deduct(ctx context.Context, id int, amount int) (domain.
 	return ticket, nil
 }
 
-func (uc TicketUseCase) Restore(ctx context.Context, id int, amount int) {
-	log.Trace().Msg("Entering ticket usecase restore")
-	log.Info().Msg("Attempting to call ticket repo to restore stock")
-	uc.repoTicket.Restore(ctx, id, amount)
-}
+// func (uc TicketUseCase) Restore(ctx context.Context, id int, amount int) {
+// 	log.Trace().Msg("Entering ticket usecase restore")
+// 	log.Info().Msg("Attempting to call ticket repo to restore stock")
+// 	uc.repoTicket.Restore(ctx, id, amount)
+// }

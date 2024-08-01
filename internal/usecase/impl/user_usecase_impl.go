@@ -21,7 +21,8 @@ func NewUserUseCase(repo repository.UserRepositoryInterface) (usecase.UserUseCas
 
 func (uc UserUseCase) Save(ctx context.Context, user domain.User) (domain.User, error) {
 	log.Trace().Msg("Entering user usecase save")
-	return uc.repo.Save(ctx, &user)
+	err := uc.repo.Save(ctx, &user)
+	return user, err
 }
 
 func (uc UserUseCase) FindById(ctx context.Context, id int) (domain.User, error) {

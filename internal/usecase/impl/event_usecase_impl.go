@@ -21,7 +21,9 @@ func NewEventUseCase(repo repository.EventRepositoryInterface) (usecase.EventUse
 
 func (uc EventUseCase) Save(ctx context.Context, event domain.Event) (domain.Event, error) {
 	log.Trace().Msg("Entering event usecase save")
-	return uc.repo.Save(ctx, &event)
+	err := uc.repo.Save(ctx, &event)
+
+	return event, err
 }
 
 func (uc EventUseCase) FindById(ctx context.Context, id int) (domain.Event, error) {

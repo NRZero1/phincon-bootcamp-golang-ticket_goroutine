@@ -1,15 +1,22 @@
 package main
 
 import (
+	"context"
+	"database/sql"
 	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"ticket_goroutine/internal/handler"
 	handlerImplement "ticket_goroutine/internal/handler/impl"
 	"ticket_goroutine/internal/middleware"
+	"ticket_goroutine/internal/provider/db"
 	"ticket_goroutine/internal/repository"
-	repoImplement "ticket_goroutine/internal/repository/impl"
+	repoImplement "ticket_goroutine/internal/repository/impl_db"
 	"ticket_goroutine/internal/usecase"
 	useCaseImplement "ticket_goroutine/internal/usecase/impl"
+	"time"
 
 	"github.com/rs/zerolog/log"
 )
@@ -29,22 +36,38 @@ var userHandler handler.UserHandlerInterface
 var ticketHandler handler.TicketHandlerInterface
 var ticketOrderHandler handler.TicketOrderHandlerInterface
 
+var database *sql.DB
+
+func initDB() *sql.DB {
+	db, err := db.NewConnection("postgresql").GetConnection("postgres", "root", "localhost", "5432", "phincon_golang_ticket")
+
+	if err != nil {
+		return nil
+	}
+
+	return db
+}
+
 func initEventHandler() handler.EventHandlerInterface {
-	eventRepo = repoImplement.NewEventRepository()
+	eventRepo = repoImplement.NewEventRepository(database)
+
+	if eventRepo == nil {
+		log.Fatal().Msg("Event repo didn't get initialized")
+	}
 	eventUseCase = useCaseImplement.NewEventUseCase(eventRepo)
 	handler := handlerImplement.NewEventHandler(eventUseCase)
 	return handler
 }
 
 func initUserHandler() handler.UserHandlerInterface {
-	userRepo = repoImplement.NewUserRepository()
+	userRepo = repoImplement.NewUserRepository(database)
 	userUseCase = useCaseImplement.NewUserUseCase(userRepo)
 	handler := handlerImplement.NewUserHandler(userUseCase)
 	return handler
 }
 
 func initTicketHandler() handler.TicketHandlerInterface {
-	ticketRepo = repoImplement.NewTicketRepository()
+	ticketRepo = repoImplement.NewTicketRepository(database)
 
 	if eventUseCase == nil {
         log.Fatal().Msg("Event use case is not initialized")
@@ -57,7 +80,7 @@ func initTicketHandler() handler.TicketHandlerInterface {
 }
 
 func initTicketOrderHandler() handler.TicketOrderHandlerInterface {
-	ticketOrderRepo = repoImplement.NewTicketOrderRepository()
+	ticketOrderRepo = repoImplement.NewTicketOrderRepository(database)
 	ticketOrderUseCase = useCaseImplement.NewTicketOrderUseCase(ticketOrderRepo, ticketUseCase, eventUseCase, userUseCase)
 	handler := handlerImplement.NewTicketOrderHandler(ticketOrderUseCase)
 	
@@ -65,6 +88,7 @@ func initTicketOrderHandler() handler.TicketOrderHandlerInterface {
 }
 
 func init() {
+	database = initDB()
 	eventHandler = initEventHandler()
 	userHandler = initUserHandler()
 	ticketHandler = initTicketHandler()
@@ -99,10 +123,31 @@ func main() {
 		Handler: middlewares(router),
 	}
 
-	fmt.Println("Server is running in port ", server.Addr)
-	err := server.ListenAndServe()
+	go func() {
+		fmt.Println("Server is running in port ", server.Addr)
+		err := server.ListenAndServe()
 
-	if err != nil {
-		panic(err.Error())
+		if err != nil {
+			panic(err.Error())
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+    signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+    <-quit
+    log.Info().Msg("Shutting down the server...")
+	errDbClose := database.Close()
+
+	if errDbClose != nil {
+		log.Fatal().Msg(fmt.Sprintf("Database shutdown error: %s", errDbClose.Error()))
 	}
+
+    // Set a timeout for shutdown (for example, 5 seconds).
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+
+    if err := server.Shutdown(ctx); err != nil {
+        log.Fatal().Msg(fmt.Sprintf("Server shutdown error: %v", err))
+    }
+    log.Info().Msg("Server gracefully stopped")
 }
