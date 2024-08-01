@@ -10,11 +10,11 @@ type TicketRepositoryInterface interface {
 	TicketFindById
 	TicketGetAll
 	TicketDeduct
-	TicketRestore
+	// TicketRestore
 }
 
 type TicketSave interface {
-	Save(context context.Context, ticket *domain.Ticket) (domain.Ticket, error)
+	Save(context context.Context, ticket *domain.Ticket) (error)
 }
 
 type TicketFindById interface {

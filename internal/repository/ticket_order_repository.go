@@ -12,7 +12,7 @@ type TicketOrderRepositoryInterface interface {
 }
 
 type TicketOrderSave interface {
-	Save(context context.Context, ticket *domain.TicketOrder) (domain.TicketOrder, error)
+	Save(context context.Context, ticket *domain.TicketOrder) (error)
 }
 
 type TicketOrderFindById interface {
