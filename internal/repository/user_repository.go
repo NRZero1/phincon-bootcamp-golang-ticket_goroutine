@@ -13,7 +13,7 @@ type UserRepositoryInterface interface {
 }
 
 type UserSave interface {
-	Save(context context.Context, user *domain.User) (domain.User, error)
+	Save(context context.Context, user *domain.User) (error)
 }
 
 type UserFindById interface {

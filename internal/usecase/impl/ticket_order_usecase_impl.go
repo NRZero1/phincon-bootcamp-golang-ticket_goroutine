@@ -73,7 +73,6 @@ func (uc TicketOrderUseCase) Save(ctx context.Context, ticketOrder domain.Ticket
 	reducedUserBalance, errBalance := uc.useCaseUser.ReduceBalance(ctx, foundUser.UserID, totalPrice)
 	
 	if errBalance != nil {
-		uc.useCaseTicket.Restore(ctx, foundTicket.TicketID, ticketOrder.Amount)
 		return dto.TicketOrderResponseSave{}, errBalance
 	}
 
@@ -85,14 +84,14 @@ func (uc TicketOrderUseCase) Save(ctx context.Context, ticketOrder domain.Ticket
 		Amount: ticketOrder.Amount,
 		TotalPrice: totalPrice,
 	}
-	savedTicket, errSaved := uc.repoTicketOrder.Save(ctx, &ticketSave)
+	errSaved := uc.repoTicketOrder.Save(ctx, &ticketSave)
 
 	if errSaved != nil {
 		return dto.TicketOrderResponseSave{}, errSaved
 	}
 
 	ticketOrderResponse := dto.TicketOrderResponseSave {
-		OrderID: savedTicket.OrderID,
+		OrderID: ticketSave.OrderID,
 		TicketDetails: dto.TicketResponse{
 			TicketID: deductedTicket.TicketID,
 			EventDetails: dto.EventResponse{
@@ -111,7 +110,7 @@ func (uc TicketOrderUseCase) Save(ctx context.Context, ticketOrder domain.Ticket
 			PhoneNumber: reducedUserBalance.PhoneNumber,
 			RemainingBalance: reducedUserBalance.Balance,
 		},
-		Amount: ticketOrder.Amount,
+		Amount: ticketSave.Amount,
 		TotalPrice: totalPrice,
 	}
 	return ticketOrderResponse, nil

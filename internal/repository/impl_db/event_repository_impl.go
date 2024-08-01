@@ -36,24 +36,30 @@ func (repo *EventRepository) Save(ctx context.Context, event *domain.Event) (err
 		log.Trace().Msg("Attempting to save new event")
 
 		trx, err := repo.db.BeginTx(ctx, nil)
+		log.Trace().Msg("Begin transaction")
 
 		if err != nil {
 			return err
 		}
 
 		query := `INSERT INTO events (event_name) VALUES ($1) RETURNING event_id`
+		log.Trace().Msg("Query is set")
 
 		stmt, err := trx.PrepareContext(ctx, query)
+		log.Trace().Msg("Prepared statement created with context")
 
 		if err != nil {
 			return err
 		}
 
+		defer stmt.Close()
+
 		errScan := stmt.QueryRowContext(ctx, event.EventName).Scan(&event.EventID)
+		log.Trace().Msg("Query ran")
 
 		if errScan != nil {
 			trx.Rollback()
-			return err
+			return errScan
 		}
 
 		if err = trx.Commit(); err != nil {
@@ -70,6 +76,7 @@ func (repo *EventRepository) FindByID(ctx context.Context, id int) (domain.Event
 	defer repo.mtx.Unlock()
 
 	log.Trace().Msg("Inside event repository find by id")
+	log.Debug().Msg(fmt.Sprintf("Event repo find by id received id with value %d", id))
 	
 	select {
 	case <- ctx.Done():
@@ -79,37 +86,44 @@ func (repo *EventRepository) FindByID(ctx context.Context, id int) (domain.Event
 		log.Trace().Msg("Attempting to fetch event")
 	
 		trx, err := repo.db.BeginTx(ctx, nil)
+		log.Trace().Msg("Begin Transaction")
 
 		if err != nil {
 			return domain.Event{}, err
 		}
 
 		query := "SELECT event_id, event_name FROM events WHERE event_id=$1"
+		log.Trace().Msg("Query is set")
 
 		stmt, err := trx.PrepareContext(ctx, query)
+		log.Trace().Msg("Prepared statement created with context")
 
 		if err != nil {
 			return domain.Event{}, err
 		}
+
+		defer stmt.Close()
 
 		var event domain.Event
 		errScan := stmt.QueryRowContext(ctx, id).Scan(
 			&event.EventID,
 			&event.EventName,
 		)
+		log.Trace().Msg("Query ran")
 
 		if errScan != nil {
 			if errScan == sql.ErrNoRows {
 				log.Error().Msg(fmt.Sprintf("Event with ID %d not found", id))
 				return domain.Event{}, fmt.Errorf("no Event found with ID %d", id)
 			}
-			return event, nil
+			return domain.Event{}, errScan
 		}
 
 		if err = trx.Commit(); err != nil {
 			return domain.Event{}, err
 		}
 
+		log.Info().Msg("Event repo find by id completed")
 		return event, nil
 	}
 }
@@ -128,24 +142,32 @@ func (repo *EventRepository) GetAll(ctx context.Context) ([]domain.Event, error)
 		log.Trace().Msg("Attempting to fetch event")
 		
 		trx, err := repo.db.BeginTx(ctx, nil)
+		log.Trace().Msg("Begin transaction")
 
 		if err != nil {
 			return []domain.Event{}, err
 		}
 
 		query := "SELECT * FROM events"
+		log.Trace().Msg("Query is set")
 
 		stmt, err := trx.PrepareContext(ctx, query)
+		log.Trace().Msg("Prepared statement created with context")
 
 		if err != nil {
 			return []domain.Event{}, err
 		}
+
+		defer stmt.Close()
 
 		res, err := stmt.QueryContext(ctx)
+		log.Trace().Msg("Query ran")
 
 		if err != nil {
 			return []domain.Event{}, err
 		}
+
+		defer res.Close()
 
 		var listOfEvents []domain.Event
 

@@ -22,19 +22,19 @@ import (
 )
 
 var eventRepo repository.EventRepositoryInterface
-// var userRepo repository.UserRepositoryInterface
-// var ticketRepo repository.TicketRepositoryInterface
-// var ticketOrderRepo repository.TicketOrderRepositoryInterface
+var userRepo repository.UserRepositoryInterface
+var ticketRepo repository.TicketRepositoryInterface
+var ticketOrderRepo repository.TicketOrderRepositoryInterface
 
 var eventUseCase usecase.EventUseCaseInterface
 var userUseCase usecase.UserUseCaseInterface
-// var ticketUseCase usecase.TicketUseCaseInterface
-// var ticketOrderUseCase usecase.TicketOrderUseCaseInterface
+var ticketUseCase usecase.TicketUseCaseInterface
+var ticketOrderUseCase usecase.TicketOrderUseCaseInterface
 
 var eventHandler handler.EventHandlerInterface
-// var userHandler handler.UserHandlerInterface
-// var ticketHandler handler.TicketHandlerInterface
-// var ticketOrderHandler handler.TicketOrderHandlerInterface
+var userHandler handler.UserHandlerInterface
+var ticketHandler handler.TicketHandlerInterface
+var ticketOrderHandler handler.TicketOrderHandlerInterface
 
 var database *sql.DB
 
@@ -59,40 +59,40 @@ func initEventHandler() handler.EventHandlerInterface {
 	return handler
 }
 
-// func initUserHandler() handler.UserHandlerInterface {
-// 	userRepo = repoImplement.NewUserRepository()
-// 	userUseCase = useCaseImplement.NewUserUseCase(userRepo)
-// 	handler := handlerImplement.NewUserHandler(userUseCase)
-// 	return handler
-// }
+func initUserHandler() handler.UserHandlerInterface {
+	userRepo = repoImplement.NewUserRepository(database)
+	userUseCase = useCaseImplement.NewUserUseCase(userRepo)
+	handler := handlerImplement.NewUserHandler(userUseCase)
+	return handler
+}
 
-// func initTicketHandler() handler.TicketHandlerInterface {
-// 	ticketRepo = repoImplement.NewTicketRepository()
+func initTicketHandler() handler.TicketHandlerInterface {
+	ticketRepo = repoImplement.NewTicketRepository(database)
 
-// 	if eventUseCase == nil {
-//         log.Fatal().Msg("Event use case is not initialized")
-//     }
+	if eventUseCase == nil {
+        log.Fatal().Msg("Event use case is not initialized")
+    }
 
-// 	ticketUseCase = useCaseImplement.NewTicketUseCase(ticketRepo, eventUseCase)
+	ticketUseCase = useCaseImplement.NewTicketUseCase(ticketRepo, eventUseCase)
 
-// 	handler := handlerImplement.NewTicketHandler(ticketUseCase)
-// 	return handler
-// }
+	handler := handlerImplement.NewTicketHandler(ticketUseCase)
+	return handler
+}
 
-// func initTicketOrderHandler() handler.TicketOrderHandlerInterface {
-// 	ticketOrderRepo = repoImplement.NewTicketOrderRepository()
-// 	ticketOrderUseCase = useCaseImplement.NewTicketOrderUseCase(ticketOrderRepo, ticketUseCase, eventUseCase, userUseCase)
-// 	handler := handlerImplement.NewTicketOrderHandler(ticketOrderUseCase)
+func initTicketOrderHandler() handler.TicketOrderHandlerInterface {
+	ticketOrderRepo = repoImplement.NewTicketOrderRepository(database)
+	ticketOrderUseCase = useCaseImplement.NewTicketOrderUseCase(ticketOrderRepo, ticketUseCase, eventUseCase, userUseCase)
+	handler := handlerImplement.NewTicketOrderHandler(ticketOrderUseCase)
 	
-// 	return handler
-// }
+	return handler
+}
 
 func init() {
 	database = initDB()
 	eventHandler = initEventHandler()
-	// userHandler = initUserHandler()
-	// ticketHandler = initTicketHandler()
-	// ticketOrderHandler = initTicketOrderHandler()
+	userHandler = initUserHandler()
+	ticketHandler = initTicketHandler()
+	ticketOrderHandler = initTicketOrderHandler()
 }
 
 func main() {
@@ -102,17 +102,17 @@ func main() {
 	router.AddRoute("GET", "/event/{id}", eventHandler.FindById)
 	router.AddRoute("POST", "/event/", eventHandler.Save)
 
-	// router.AddRoute("GET", "/user/", userHandler.GetAll)
-	// router.AddRoute("GET", "/user/{id}", userHandler.FindById)
-	// router.AddRoute("POST", "/user/", userHandler.Save)
+	router.AddRoute("GET", "/user/", userHandler.GetAll)
+	router.AddRoute("GET", "/user/{id}", userHandler.FindById)
+	router.AddRoute("POST", "/user/", userHandler.Save)
 
-	// router.AddRoute("GET", "/ticket/", ticketHandler.GetAll)
-	// router.AddRoute("GET", "/ticket/{id}", ticketHandler.FindById)
-	// router.AddRoute("POST", "/ticket/", ticketHandler.Save)
+	router.AddRoute("GET", "/ticket/", ticketHandler.GetAll)
+	router.AddRoute("GET", "/ticket/{id}", ticketHandler.FindById)
+	router.AddRoute("POST", "/ticket/", ticketHandler.Save)
 
-	// router.AddRoute("GET", "/ticket-order/", ticketOrderHandler.GetAll)
-	// router.AddRoute("GET", "/ticket-order/{id}", ticketOrderHandler.FindById)
-	// router.AddRoute("POST", "/ticket-order/", ticketOrderHandler.Save)
+	router.AddRoute("GET", "/ticket-order/", ticketOrderHandler.GetAll)
+	router.AddRoute("GET", "/ticket-order/{id}", ticketOrderHandler.FindById)
+	router.AddRoute("POST", "/ticket-order/", ticketOrderHandler.Save)
 
 	middlewares := middleware.CreateStack(
 		middleware.Logging,

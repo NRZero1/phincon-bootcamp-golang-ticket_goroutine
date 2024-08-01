@@ -304,7 +304,7 @@ func (h TicketHandler) FindById(responseWriter http.ResponseWriter, request *htt
 
 func (h TicketHandler) GetAll(responseWriter http.ResponseWriter, request *http.Request) {
 	log.Trace().Msg("Entering ticket get all handler")
-	ctx, cancel := context.WithTimeout(request.Context(), 2 * time.Second)
+	ctx, cancel := context.WithTimeout(request.Context(), 30 * time.Second)
 	defer cancel()
 
 	done := make(chan struct{})
