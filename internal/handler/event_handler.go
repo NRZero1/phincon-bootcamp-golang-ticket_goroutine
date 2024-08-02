@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"net/http"
+	"github.com/gin-gonic/gin"
 )
 
 type EventHandlerInterface interface {
@@ -11,13 +11,13 @@ type EventHandlerInterface interface {
 }
 
 type EventSave interface {
-	Save(responseWritter http.ResponseWriter, request *http.Request)
+	Save(context *gin.Context)
 }
 
 type EventFindById interface {
-	FindById(responseWritter http.ResponseWriter, request *http.Request)
+	FindById(context *gin.Context)
 }
 
 type EventGetAll interface {
-	GetAll(responseWritter http.ResponseWriter, request *http.Request)
+	GetAll(context *gin.Context)
 }

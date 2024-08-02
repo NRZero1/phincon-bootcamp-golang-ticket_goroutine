@@ -11,7 +11,7 @@ type TicketUseCaseInterface interface {
 	TicketFindById
 	TicketGetAll
 	TicketDeduct
-	// TicketRestore
+	TicketRestore
 }
 
 type TicketSave interface {

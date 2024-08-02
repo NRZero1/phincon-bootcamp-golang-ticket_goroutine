@@ -10,7 +10,7 @@ type TicketRepositoryInterface interface {
 	TicketFindById
 	TicketGetAll
 	TicketDeduct
-	// TicketRestore
+	TicketRestore
 }
 
 type TicketSave interface {

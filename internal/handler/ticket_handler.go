@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"net/http"
+	"github.com/gin-gonic/gin"
 )
 
 type TicketHandlerInterface interface {
@@ -11,13 +11,13 @@ type TicketHandlerInterface interface {
 }
 
 type TicketSave interface {
-	Save(responseWritter http.ResponseWriter, request *http.Request)
+	Save(context *gin.Context)
 }
 
 type TicketFindById interface {
-	FindById(responseWritter http.ResponseWriter, request *http.Request)
+	FindById(context *gin.Context)
 }
 
 type TicketGetAll interface {
-	GetAll(responseWritter http.ResponseWriter, request *http.Request)
+	GetAll(context *gin.Context)
 }

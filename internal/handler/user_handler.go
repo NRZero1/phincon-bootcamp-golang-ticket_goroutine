@@ -1,8 +1,6 @@
 package handler
 
-import (
-	"net/http"
-)
+import "github.com/gin-gonic/gin"
 
 type UserHandlerInterface interface {
 	UserSave
@@ -11,13 +9,13 @@ type UserHandlerInterface interface {
 }
 
 type UserSave interface {
-	Save(responseWritter http.ResponseWriter, request *http.Request)
+	Save(context *gin.Context)
 }
 
 type UserFindById interface {
-	FindById(responseWritter http.ResponseWriter, request *http.Request)
+	FindById(context *gin.Context)
 }
 
 type UserGetAll interface {
-	GetAll(responseWritter http.ResponseWriter, request *http.Request)
+	GetAll(context *gin.Context)
 }

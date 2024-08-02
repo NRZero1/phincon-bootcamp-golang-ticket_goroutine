@@ -8,35 +8,17 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"ticket_goroutine/internal/handler"
-	handlerImplement "ticket_goroutine/internal/handler/impl"
 	"ticket_goroutine/internal/middleware"
 	"ticket_goroutine/internal/provider/db"
-	"ticket_goroutine/internal/repository"
-	repoImplement "ticket_goroutine/internal/repository/impl_db"
-	"ticket_goroutine/internal/usecase"
-	useCaseImplement "ticket_goroutine/internal/usecase/impl"
+	"ticket_goroutine/internal/provider/handler"
+	"ticket_goroutine/internal/provider/repository"
+	"ticket_goroutine/internal/provider/routes"
+	"ticket_goroutine/internal/provider/usecase"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
 )
-
-var eventRepo repository.EventRepositoryInterface
-var userRepo repository.UserRepositoryInterface
-var ticketRepo repository.TicketRepositoryInterface
-var ticketOrderRepo repository.TicketOrderRepositoryInterface
-
-var eventUseCase usecase.EventUseCaseInterface
-var userUseCase usecase.UserUseCaseInterface
-var ticketUseCase usecase.TicketUseCaseInterface
-var ticketOrderUseCase usecase.TicketOrderUseCaseInterface
-
-var eventHandler handler.EventHandlerInterface
-var userHandler handler.UserHandlerInterface
-var ticketHandler handler.TicketHandlerInterface
-var ticketOrderHandler handler.TicketOrderHandlerInterface
-
-var database *sql.DB
 
 func initDB() *sql.DB {
 	db, err := db.NewConnection("postgresql").GetConnection("postgres", "root", "localhost", "5432", "phincon_golang_ticket")
@@ -48,87 +30,38 @@ func initDB() *sql.DB {
 	return db
 }
 
-func initEventHandler() handler.EventHandlerInterface {
-	eventRepo = repoImplement.NewEventRepository(database)
-
-	if eventRepo == nil {
-		log.Fatal().Msg("Event repo didn't get initialized")
-	}
-	eventUseCase = useCaseImplement.NewEventUseCase(eventRepo)
-	handler := handlerImplement.NewEventHandler(eventUseCase)
-	return handler
-}
-
-func initUserHandler() handler.UserHandlerInterface {
-	userRepo = repoImplement.NewUserRepository(database)
-	userUseCase = useCaseImplement.NewUserUseCase(userRepo)
-	handler := handlerImplement.NewUserHandler(userUseCase)
-	return handler
-}
-
-func initTicketHandler() handler.TicketHandlerInterface {
-	ticketRepo = repoImplement.NewTicketRepository(database)
-
-	if eventUseCase == nil {
-        log.Fatal().Msg("Event use case is not initialized")
-    }
-
-	ticketUseCase = useCaseImplement.NewTicketUseCase(ticketRepo, eventUseCase)
-
-	handler := handlerImplement.NewTicketHandler(ticketUseCase)
-	return handler
-}
-
-func initTicketOrderHandler() handler.TicketOrderHandlerInterface {
-	ticketOrderRepo = repoImplement.NewTicketOrderRepository(database)
-	ticketOrderUseCase = useCaseImplement.NewTicketOrderUseCase(ticketOrderRepo, ticketUseCase, eventUseCase, userUseCase)
-	handler := handlerImplement.NewTicketOrderHandler(ticketOrderUseCase)
-	
-	return handler
-}
-
-func init() {
-	database = initDB()
-	eventHandler = initEventHandler()
-	userHandler = initUserHandler()
-	ticketHandler = initTicketHandler()
-	ticketOrderHandler = initTicketOrderHandler()
-}
-
 func main() {
-	router := middleware.NewRouter()
+	router := gin.New()
 
-	router.AddRoute("GET", "/event/", eventHandler.GetAll)
-	router.AddRoute("GET", "/event/{id}", eventHandler.FindById)
-	router.AddRoute("POST", "/event/", eventHandler.Save)
+	// middlewares := middleware.CreateStack(
+	// 	middleware.Logging,
+	// )
 
-	router.AddRoute("GET", "/user/", userHandler.GetAll)
-	router.AddRoute("GET", "/user/{id}", userHandler.FindById)
-	router.AddRoute("POST", "/user/", userHandler.Save)
+	db := initDB()
 
-	router.AddRoute("GET", "/ticket/", ticketHandler.GetAll)
-	router.AddRoute("GET", "/ticket/{id}", ticketHandler.FindById)
-	router.AddRoute("POST", "/ticket/", ticketHandler.Save)
+	repository.InitRepository(db)
+	usecase.InitUseCase()
+	handler.InitHandler()
 
-	router.AddRoute("GET", "/ticket-order/", ticketOrderHandler.GetAll)
-	router.AddRoute("GET", "/ticket-order/{id}", ticketOrderHandler.FindById)
-	router.AddRoute("POST", "/ticket-order/", ticketOrderHandler.Save)
-
-	middlewares := middleware.CreateStack(
-		middleware.Logging,
-	)
+	router.Use(gin.Recovery(), middleware.Logging())
 	
-	server := http.Server{
+	globalGroup := router.Group("")
+	{
+		routes.EventRoutes(globalGroup.Group("/event"), handler.EventHandler)
+		routes.UserRoutes(globalGroup.Group("/user"), handler.UserHandler)
+		routes.TicketRoutes(globalGroup.Group("/ticket"), handler.TicketHandler)
+		routes.TicketOrderRoutes(globalGroup.Group("/ticket-order"), handler.TicketOrderHandler)
+	}
+	
+	server := &http.Server{
 		Addr:    "localhost:8080",
-		Handler: middlewares(router),
+		Handler: router,
 	}
 
 	go func() {
 		fmt.Println("Server is running in port ", server.Addr)
-		err := server.ListenAndServe()
-
-		if err != nil {
-			panic(err.Error())
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatal().Msg(fmt.Sprintf("listen: %s\n", err))
 		}
 	}()
 
@@ -136,7 +69,7 @@ func main() {
     signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
     <-quit
     log.Info().Msg("Shutting down the server...")
-	errDbClose := database.Close()
+	errDbClose := db.Close()
 
 	if errDbClose != nil {
 		log.Fatal().Msg(fmt.Sprintf("Database shutdown error: %s", errDbClose.Error()))

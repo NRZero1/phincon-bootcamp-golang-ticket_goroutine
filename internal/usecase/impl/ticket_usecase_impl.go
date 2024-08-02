@@ -137,8 +137,8 @@ func (uc TicketUseCase) Deduct(ctx context.Context, id int, amount int) (domain.
 	return ticket, nil
 }
 
-// func (uc TicketUseCase) Restore(ctx context.Context, id int, amount int) {
-// 	log.Trace().Msg("Entering ticket usecase restore")
-// 	log.Info().Msg("Attempting to call ticket repo to restore stock")
-// 	uc.repoTicket.Restore(ctx, id, amount)
-// }
+func (uc TicketUseCase) Restore(ctx context.Context, id int, amount int) {
+	log.Trace().Msg("Entering ticket usecase restore")
+	log.Info().Msg("Attempting to call ticket repo to restore stock")
+	uc.repoTicket.Restore(ctx, id, amount)
+}

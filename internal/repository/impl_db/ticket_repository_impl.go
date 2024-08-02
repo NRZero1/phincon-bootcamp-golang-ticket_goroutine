@@ -326,3 +326,91 @@ func (repo *TicketRepository) Deduct(ctx context.Context, id int, amount int) (d
 		return ticket, nil
 	}
 }
+
+func (repo *TicketRepository) Restore(ctx context.Context, id int, amount int) {
+	log.Trace().Msg("Inside ticket repository restore")
+	defer repo.mtx.Unlock()
+
+	repo.mtx.Lock()
+	log.Info().Msg("Trying to restore stock")
+	
+	trx, err := repo.db.Begin()
+	log.Trace().Msg("Begin transaction")
+
+	if err != nil {
+		log.Fatal().Msg(fmt.Sprintf("Error trying to built transaction in restore stock with message: %s", err.Error()))
+	}
+
+	query := `
+		SELECT
+			t.ticket_id,
+			t.event_id,
+			t.name,
+			t.price,
+			t.stock,
+			t.type
+		FROM tickets t
+		WHERE
+			t.ticket_id=$1
+	`
+	log.Trace().Msg("Query is set")
+
+	stmt, err := trx.Prepare(query)
+	log.Trace().Msg("Prepared statement created")
+
+	if err != nil {
+		log.Fatal().Msg(fmt.Sprintf("Error trying to create prepared statement in restore stock with message: %s", err.Error()))
+	}
+
+	defer stmt.Close()
+
+	var foundTicket domain.Ticket
+
+	errScan := stmt.QueryRow(id).Scan(
+		&foundTicket.TicketID,
+		&foundTicket.EventID,
+		&foundTicket.Name,
+		&foundTicket.Price,
+		&foundTicket.Stock,
+		&foundTicket.Type,
+	)
+
+	if errScan != nil {
+		if errScan == sql.ErrNoRows {
+			log.Error().Msg(fmt.Sprintf("Ticket with ID %d not found", id))
+			log.Fatal().Msg(fmt.Sprintf("no Ticket found with ID %d", id))
+		}
+		log.Fatal().Msg(fmt.Sprintf("Error when trying to scan find by id ticket with message: %s", errScan.Error()))
+	}
+
+	log.Debug().Msg(fmt.Sprintf("Stock before restore: %d", foundTicket.Stock))
+	foundTicket.Stock = foundTicket.Stock + amount
+
+	query2 := `
+		UPDATE
+			tickets
+		SET
+			stock=$1
+		WHERE
+			ticket_id=$2
+		RETURNING
+			ticket_id,
+			stock
+	`
+	log.Trace().Msg("Query update is set")
+
+	stmt2, err := trx.Prepare(query2)
+
+	if err != nil {
+		log.Fatal().Msg(fmt.Sprintf("Error trying to create prepared statement in restore stock with message: %s", err.Error()))
+	}
+
+	errScan2 := stmt2.QueryRow(foundTicket.Stock, id).Scan(&foundTicket.TicketID, &foundTicket.Stock)
+
+	if errScan2 != nil {
+		log.Fatal().Msg(fmt.Sprintf("Error when trying to scan update ticket with message: %s", errScan2.Error()))
+	}
+
+	log.Debug().Msg(fmt.Sprintf("Stock after restore: %d", foundTicket.Stock))
+	log.Info().Msg("Stock restored successfully")
+}

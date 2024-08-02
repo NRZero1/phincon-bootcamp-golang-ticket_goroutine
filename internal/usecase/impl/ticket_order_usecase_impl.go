@@ -73,7 +73,7 @@ func (uc TicketOrderUseCase) Save(ctx context.Context, ticketOrder domain.Ticket
 	reducedUserBalance, errBalance := uc.useCaseUser.ReduceBalance(ctx, foundUser.UserID, totalPrice)
 	
 	if errBalance != nil {
-		return dto.TicketOrderResponseSave{}, errBalance
+		uc.useCaseTicket.Restore(ctx, deductedTicket.TicketID, ticketOrder.Amount)
 	}
 
 	log.Info().Msg("Attempting to call ticket order repo save")
