@@ -1,0 +1,175 @@
+{
+    "clientName": "Thunder Client",
+    "collectionName": "Golang Ticket",
+    "collectionId": "1931462d-e197-4620-9da2-c62f18c9cd28",
+    "dateExported": "2024-08-05T15:57:37.184Z",
+    "version": "1.2",
+    "folders": [],
+    "requests": [
+        {
+            "_id": "5ac22c61-928f-47bb-994f-b2891ad82d46",
+            "colId": "1931462d-e197-4620-9da2-c62f18c9cd28",
+            "containerId": "",
+            "name": "Get All Event",
+            "url": "localhost:8080/event/",
+            "method": "GET",
+            "sortNum": 20000,
+            "created": "2024-08-02T10:11:54.672Z",
+            "modified": "2024-08-02T10:11:54.672Z",
+            "headers": []
+        },
+        {
+            "_id": "d4751d47-d8bd-4032-b122-5da4405894a0",
+            "colId": "1931462d-e197-4620-9da2-c62f18c9cd28",
+            "containerId": "",
+            "name": "Get Event By ID",
+            "url": "localhost:8080/event/1",
+            "method": "GET",
+            "sortNum": 30000,
+            "created": "2024-08-02T10:12:22.132Z",
+            "modified": "2024-08-02T10:12:22.132Z",
+            "headers": []
+        },
+        {
+            "_id": "0f2893f6-1cce-4c42-8f92-fc557d5fc42a",
+            "colId": "1931462d-e197-4620-9da2-c62f18c9cd28",
+            "containerId": "",
+            "name": "Post Event",
+            "url": "localhost:8080/event/",
+            "method": "POST",
+            "sortNum": 50000,
+            "created": "2024-08-02T10:18:30.323Z",
+            "modified": "2024-08-02T10:18:30.323Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"EventName\": \"Test Event Untuk Save ke Collection\"\n}",
+                "form": []
+            }
+        },
+        {
+            "_id": "de594786-b342-4067-93ba-e60aacfe8b2c",
+            "colId": "1931462d-e197-4620-9da2-c62f18c9cd28",
+            "containerId": "",
+            "name": "Get All User",
+            "url": "localhost:8080/user/",
+            "method": "GET",
+            "sortNum": 60000,
+            "created": "2024-08-02T10:19:04.585Z",
+            "modified": "2024-08-02T10:19:04.585Z",
+            "headers": []
+        },
+        {
+            "_id": "7f50a708-4b1c-4844-a0d0-10521684069a",
+            "colId": "1931462d-e197-4620-9da2-c62f18c9cd28",
+            "containerId": "",
+            "name": "Get User By ID",
+            "url": "localhost:8080/user/1",
+            "method": "GET",
+            "sortNum": 80000,
+            "created": "2024-08-05T15:47:49.503Z",
+            "modified": "2024-08-05T15:53:19.746Z",
+            "headers": []
+        },
+        {
+            "_id": "d926928e-995e-4a50-900b-b84e3e0b0999",
+            "colId": "1931462d-e197-4620-9da2-c62f18c9cd28",
+            "containerId": "",
+            "name": "Post User",
+            "url": "localhost:8080/user/",
+            "method": "POST",
+            "sortNum": 90000,
+            "created": "2024-08-05T15:49:50.559Z",
+            "modified": "2024-08-05T15:49:50.559Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"Email\": \"test@email.com\",\n  \"Name\": \"Test User\",\n  \"PhoneNumber\": \"+6212345678901\",\n  \"Balance\": 100000\n}",
+                "form": []
+            }
+        },
+        {
+            "_id": "71a23d65-1f7f-4523-b479-ba83790c0841",
+            "colId": "1931462d-e197-4620-9da2-c62f18c9cd28",
+            "containerId": "",
+            "name": "Get All Ticket",
+            "url": "localhost:8080/ticket/",
+            "method": "GET",
+            "sortNum": 100000,
+            "created": "2024-08-05T15:50:51.271Z",
+            "modified": "2024-08-05T15:53:34.910Z",
+            "headers": []
+        },
+        {
+            "_id": "64e529ae-9e61-4028-84b3-6a0980b54349",
+            "colId": "1931462d-e197-4620-9da2-c62f18c9cd28",
+            "containerId": "",
+            "name": "Get Ticket By ID",
+            "url": "localhost:8080/ticket/2",
+            "method": "GET",
+            "sortNum": 110000,
+            "created": "2024-08-05T15:51:13.255Z",
+            "modified": "2024-08-05T15:53:37.182Z",
+            "headers": []
+        },
+        {
+            "_id": "2eb610c3-bd0c-4802-8efa-18d0e2315741",
+            "colId": "1931462d-e197-4620-9da2-c62f18c9cd28",
+            "containerId": "",
+            "name": "Post Ticket",
+            "url": "localhost:8080/ticket/",
+            "method": "POST",
+            "sortNum": 120000,
+            "created": "2024-08-05T15:52:26.766Z",
+            "modified": "2024-08-05T15:52:26.766Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"EventID\": 1,\n  \"Name\": \"Test Ticket\",\n  \"Price\": 1000,\n  \"Stock\": 100,\n  \"Type\": \"Test\"\n}",
+                "form": []
+            }
+        },
+        {
+            "_id": "8935bd6d-dde5-4067-9d3d-53aa94d56a7a",
+            "colId": "1931462d-e197-4620-9da2-c62f18c9cd28",
+            "containerId": "",
+            "name": "Get All Ticket Order",
+            "url": "localhost:8080/ticket-order/",
+            "method": "GET",
+            "sortNum": 130000,
+            "created": "2024-08-05T15:56:20.431Z",
+            "modified": "2024-08-05T15:56:20.431Z",
+            "headers": []
+        },
+        {
+            "_id": "efbefa5e-870d-434a-be83-1c5fe8d5ad33",
+            "colId": "1931462d-e197-4620-9da2-c62f18c9cd28",
+            "containerId": "",
+            "name": "Get Ticket Order By ID",
+            "url": "localhost:8080/ticket-order/2",
+            "method": "GET",
+            "sortNum": 140000,
+            "created": "2024-08-05T15:56:37.862Z",
+            "modified": "2024-08-05T15:56:37.862Z",
+            "headers": []
+        },
+        {
+            "_id": "dbdd7c55-3366-4606-a6f3-bc0e92ee2c57",
+            "colId": "1931462d-e197-4620-9da2-c62f18c9cd28",
+            "containerId": "",
+            "name": "Post Ticket Order",
+            "url": "localhost:8080/ticket-order/",
+            "method": "POST",
+            "sortNum": 150000,
+            "created": "2024-08-05T15:57:25.935Z",
+            "modified": "2024-08-05T15:57:25.935Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"TicketID\": 2,\n  \"UserID\": 1,\n  \"Amount\": 2\n}",
+                "form": []
+            }
+        }
+    ],
+    "ref": "rkbZK8posrxSiW9WxXYwAfCseh1ZWmKO6B-pIhaw6t41G1LHeZV-eJKVZcu8aXAXK1P63L3T0qdvZwlToUdNxA"
+}
