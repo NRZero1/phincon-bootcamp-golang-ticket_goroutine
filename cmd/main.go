@@ -31,6 +31,7 @@ func initDB() *sql.DB {
 }
 
 func main() {
+	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()
 
 	// middlewares := middleware.CreateStack(
