@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
 
@@ -32,6 +33,7 @@ func initDB() *sql.DB {
 
 func main() {
 	gin.SetMode(gin.ReleaseMode)
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	router := gin.New()
 
 	// middlewares := middleware.CreateStack(
@@ -53,6 +55,8 @@ func main() {
 		routes.TicketRoutes(globalGroup.Group("/ticket"), handler.TicketHandler)
 		routes.TicketOrderRoutes(globalGroup.Group("/ticket-order"), handler.TicketOrderHandler)
 	}
+
+	db.SetMaxOpenConns(25)
 	
 	server := &http.Server{
 		Addr:    "localhost:8080",
