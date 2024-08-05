@@ -1,4 +1,4 @@
-package implneth
+package implnethttp
 
 // import (
 // 	"context"
@@ -117,7 +117,7 @@ package implneth
 // 			responseWriter.Header().Set("X-Content-Type-Options", "nosniff")
 
 // 			var response dto.GlobalResponse
-			
+
 // 			if errors.Is(errSave, context.DeadlineExceeded) || errors.Is(errSave, context.Canceled) {
 // 				log.Trace().Msg("Timeout error")
 // 				log.Error().Str("Error message: ", errSave.Error())
@@ -279,7 +279,7 @@ package implneth
 // 		log.Info().Msg("Ticket fetched successfully and returning json")
 // 		json.NewEncoder(responseWriter).Encode(response)
 // 	}()
-	
+
 // 	select {
 // 	case <- ctx.Done():
 // 		log.Trace().Msg("Request timeout channel")
@@ -333,7 +333,7 @@ package implneth
 // 			json.NewEncoder(responseWriter).Encode(response)
 // 			return
 // 		}
-		
+
 // 		response := dto.GlobalResponse {
 // 			StatusCode: http.StatusOK,
 // 			StatusDesc: http.StatusText(http.StatusOK),
