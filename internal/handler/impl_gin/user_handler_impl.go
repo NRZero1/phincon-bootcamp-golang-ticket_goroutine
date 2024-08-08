@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"ticket_goroutine/internal/domain"
 	"ticket_goroutine/internal/domain/dto"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/rs/zerolog/log"
 )
 
@@ -31,7 +33,7 @@ func NewUserHandler(usecase usecase.UserUseCaseInterface) (handler.UserHandlerIn
 func (h UserHandler) Save(c *gin.Context) {
 	log.Trace().Msg("Entering user handler save")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 2 * time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10 * time.Second)
 	defer cancel()
 
 	var user domain.User
@@ -60,22 +62,42 @@ func (h UserHandler) Save(c *gin.Context) {
 
 	log.Trace().Msg("Validating user input")
 	errValidate := utils.ValidateStruct(&user)
+	sevenOrMore, number, upper := utils.VerifyPassword(user.Password)
+	var errPassword []string
 
-	if errValidate != nil {
+	if !sevenOrMore {
+		errPassword = append(errPassword, "seven or more")
+	}
+
+	if !number {
+		errPassword = append(errPassword, "number")
+	}
+
+	if !upper {
+		errPassword = append(errPassword, "upper")
+	}
+
+	if errValidate != nil || len(errPassword) > 0 {
 		log.Trace().Msg("Validation error")
-		if _, ok := errValidate.(*validator.InvalidValidationError); ok {
-			log.Trace().Msg("Error with validator")
-			log.Error().Str("Error message: ", errValidate.Error())
-			c.JSON(http.StatusInternalServerError, errValidate.Error())
-            return
+		errors := make(map[string]string)
+		log.Trace().Msg("User input error")
+		if errValidate != nil {
+			if _, ok := errValidate.(*validator.InvalidValidationError); ok {
+				log.Trace().Msg("Error with validator")
+				log.Error().Str("Error message: ", errValidate.Error())
+				c.JSON(http.StatusInternalServerError, errValidate.Error())
+				return
+			}
+
+			for _, err := range errValidate.(validator.ValidationErrors) {
+				errors[err.Field()] = fmt.Sprintf("Validation failed on '%s' tag", err.Tag())
+				log.Error().Msg(fmt.Sprintf("Validation failed on '%s' tag", err.Tag()))
+			}
 		}
 
-		log.Trace().Msg("User input error")
-		errors := make(map[string]string)
-		for _, err := range errValidate.(validator.ValidationErrors) {
-            errors[err.Field()] = fmt.Sprintf("Validation failed on '%s' tag", err.Tag())
-			log.Error().Msg(fmt.Sprintf("Validation failed on '%s' tag", err.Tag()))
-        }
+		if len(errPassword) > 0 {
+			errors["Password"] = fmt.Sprintf("Password is not valid on [%v] validation", errPassword)
+		}
 
 		c.Writer.Header().Set("Content-Type", "application/json")
 		c.Writer.Header().Set("X-Content-Type-Options", "nosniff")
@@ -108,8 +130,9 @@ func (h UserHandler) Save(c *gin.Context) {
 	go func() {
 		defer close(done)
 		log.Trace().Msg("Inside goroutine trying to save")
-		savedUser, errSave := h.usecase.Save(ctx, user)
 
+		savedUser, errSave := h.usecase.Save(ctx, user)
+		
 		if errSave != nil {
 			log.Trace().Msg("Checking error cause")
 			c.Writer.Header().Set("Content-Type", "application/json")
@@ -131,6 +154,21 @@ func (h UserHandler) Save(c *gin.Context) {
 					Data: "",
 				}
 				c.JSON(http.StatusRequestTimeout, response)
+			} else if errors.Is(errSave, utils.ErrHash) {
+				log.Error().Msg(fmt.Sprintf("Error hashing password with message: %s", err.Error()))
+
+				c.Writer.WriteHeader(http.StatusInternalServerError)
+
+				response := dto.GlobalResponse {
+					StatusCode: http.StatusInternalServerError,
+					StatusDesc: http.StatusText(http.StatusInternalServerError),
+					Message: err.Error(),
+					RequestCreated: time.Now().Format("2006-01-02 15:04:05"),
+					ProcessTime: time.Duration(time.Since(time.Now()).Milliseconds()),
+					Data: "",
+				}
+				c.JSON(http.StatusInternalServerError, response)
+				return
 			} else {
 				log.Trace().Msg("Save error")
 				log.Error().Str("Error message: ", errSave.Error())
@@ -369,4 +407,116 @@ func (h UserHandler) GetAll(c *gin.Context) {
 	case <- done:
 		log.Info().Msg("Request completed")
 	}
+}
+
+func (h UserHandler) Login(c *gin.Context) {
+	var loginRequest dto.Login
+
+	err := c.ShouldBindJSON(&loginRequest)
+	
+	if err != nil {
+		log.Trace().Msg("JSON decode error")
+		log.Error().Str("Error message: ", err.Error())
+		response := dto.GlobalResponse {
+			StatusCode: http.StatusBadRequest,
+			StatusDesc: http.StatusText(http.StatusBadRequest),
+			Message: err.Error(),
+			RequestCreated: time.Now().Format("2006-01-02 15:04:05"),
+			ProcessTime: time.Duration(time.Since(time.Now()).Milliseconds()),
+			Data: "",
+		}
+
+		c.Writer.Header().Set("Content-Type", "application/json")
+		c.Writer.Header().Set("X-Content-Type-Options", "nosniff")
+		c.Writer.WriteHeader(http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+	
+	foundUser, err := h.usecase.FindByEmail(c.Request.Context(), loginRequest.Email)
+
+	if err != nil {
+		log.Trace().Msg("Found user error")
+		log.Error().Str("Error message: ", err.Error())
+		response := dto.GlobalResponse {
+			StatusCode: http.StatusNotFound,
+			StatusDesc: http.StatusText(http.StatusNotFound),
+			Message: err.Error(),
+			RequestCreated: time.Now().Format("2006-01-02 15:04:05"),
+			ProcessTime: time.Duration(time.Since(time.Now()).Milliseconds()),
+			Data: "",
+		}
+
+		c.Writer.Header().Set("Content-Type", "application/json")
+		c.Writer.Header().Set("X-Content-Type-Options", "nosniff")
+		c.Writer.WriteHeader(http.StatusNotFound)
+		c.JSON(http.StatusNotFound, response)
+		return
+	}
+
+	isSame := utils.CheckPasswordHash(loginRequest.Password, foundUser.Password)
+
+	if !isSame {
+		log.Trace().Msg("Password mismatch error")
+		log.Error().Str("Error message: ", errors.New("wrong password").Error())
+		response := dto.GlobalResponse {
+			StatusCode: http.StatusUnauthorized,
+			StatusDesc: http.StatusText(http.StatusUnauthorized),
+			Message: errors.New("wrong password").Error(),
+			RequestCreated: time.Now().Format("2006-01-02 15:04:05"),
+			ProcessTime: time.Duration(time.Since(time.Now()).Milliseconds()),
+			Data: "",
+		}
+
+		c.Writer.Header().Set("Content-Type", "application/json")
+		c.Writer.Header().Set("X-Content-Type-Options", "nosniff")
+		c.Writer.WriteHeader(http.StatusUnauthorized)
+		c.JSON(http.StatusNotFound, response)
+		return
+	}
+	
+	claims := domain.Claims{
+		Email: foundUser.Email,
+		Name: foundUser.Name,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute * 5)),
+			IssuedAt: jwt.NewNumericDate(time.Now()),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	secretKey := []byte(os.Getenv("SECRET"))
+	tokenString, err := token.SignedString(secretKey)
+
+	if err != nil {
+		log.Trace().Msg("Error creating signature")
+		log.Error().Str("Error message: ", err.Error())
+		response := dto.GlobalResponse {
+			StatusCode: http.StatusInternalServerError,
+			StatusDesc: http.StatusText(http.StatusInternalServerError),
+			Message: err.Error(),
+			RequestCreated: time.Now().Format("2006-01-02 15:04:05"),
+			ProcessTime: time.Duration(time.Since(time.Now()).Milliseconds()),
+			Data: "",
+		}
+
+		c.Writer.Header().Set("Content-Type", "application/json")
+		c.Writer.Header().Set("X-Content-Type-Options", "nosniff")
+		c.Writer.WriteHeader(http.StatusInternalServerError)
+		c.JSON(http.StatusNotFound, response)
+		return
+	}
+
+	// c.SetCookie("token", tokenString, time.Now().Add(time.Minute * 1).Second(), "", "", false, true)
+	response := dto.GlobalResponse {
+		StatusCode: http.StatusInternalServerError,
+		StatusDesc: http.StatusText(http.StatusInternalServerError),
+		Message: "OK",
+		RequestCreated: time.Now().Format("2006-01-02 15:04:05"),
+		ProcessTime: time.Duration(time.Since(time.Now()).Milliseconds()),
+		Data: tokenString,
+	}
+	c.Writer.Header().Set("Content-Type", "application/json")
+	c.Writer.WriteHeader(http.StatusOK)
+	c.JSON(http.StatusOK, response)
 }

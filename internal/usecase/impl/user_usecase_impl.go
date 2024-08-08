@@ -5,6 +5,7 @@ import (
 	"ticket_goroutine/internal/domain"
 	"ticket_goroutine/internal/repository"
 	"ticket_goroutine/internal/usecase"
+	"ticket_goroutine/utils"
 
 	"github.com/rs/zerolog/log"
 )
@@ -21,8 +22,15 @@ func NewUserUseCase(repo repository.UserRepositoryInterface) (usecase.UserUseCas
 
 func (uc UserUseCase) Save(ctx context.Context, user domain.User) (domain.User, error) {
 	log.Trace().Msg("Entering user usecase save")
-	err := uc.repo.Save(ctx, &user)
-	return user, err
+	hashedPass, err := utils.HashPassword(user.Password)
+	if err != nil {
+		return domain.User{}, utils.ErrHash
+	}
+
+	user.Password = hashedPass
+
+	errSave := uc.repo.Save(ctx, &user)
+	return user, errSave
 }
 
 func (uc UserUseCase) FindById(ctx context.Context, id int) (domain.User, error) {
@@ -38,4 +46,9 @@ func (uc UserUseCase) GetAll(ctx context.Context) ([]domain.User, error) {
 func (uc UserUseCase) ReduceBalance(ctx context.Context, id int, amount float64) (domain.User, error) {
 	log.Trace().Msg("Entering user usecase reduce balance")
 	return uc.repo.ReduceBalance(ctx, id, amount)
+}
+
+func (uc UserUseCase) FindByEmail(ctx context.Context, email string) (domain.User, error) {
+	log.Trace().Msg("Enter user usecase FindByEmail")
+	return uc.repo.FindByEmail(ctx, email)
 }

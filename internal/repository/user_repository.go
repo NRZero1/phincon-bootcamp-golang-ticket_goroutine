@@ -10,6 +10,7 @@ type UserRepositoryInterface interface {
 	UserFindById
 	UserGetAll
 	UserBalanceReduce
+	UserFindByEmail
 }
 
 type UserSave interface {
@@ -26,4 +27,8 @@ type UserGetAll interface {
 
 type UserBalanceReduce interface {
 	ReduceBalance(context context.Context, id int, amount float64) (domain.User, error)
+}
+
+type UserFindByEmail interface {
+	FindByEmail(context context.Context, email string) (domain.User, error)
 }

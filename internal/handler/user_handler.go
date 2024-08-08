@@ -6,6 +6,7 @@ type UserHandlerInterface interface {
 	UserSave
 	UserFindById
 	UserGetAll
+	UserLogin
 }
 
 type UserSave interface {
@@ -18,4 +19,8 @@ type UserFindById interface {
 
 type UserGetAll interface {
 	GetAll(context *gin.Context)
+}
+
+type UserLogin interface {
+	Login(context *gin.Context)
 }

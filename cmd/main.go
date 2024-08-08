@@ -17,7 +17,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog"
+	"github.com/joho/godotenv"
 	"github.com/rs/zerolog/log"
 )
 
@@ -32,8 +32,12 @@ func initDB() *sql.DB {
 }
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal().Msg("Error loading .env file")
+	}
 	gin.SetMode(gin.ReleaseMode)
-	zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	// zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	router := gin.New()
 
 	// middlewares := middleware.CreateStack(
@@ -53,7 +57,12 @@ func main() {
 		routes.EventRoutes(globalGroup.Group("/event"), handler.EventHandler)
 		routes.UserRoutes(globalGroup.Group("/user"), handler.UserHandler)
 		routes.TicketRoutes(globalGroup.Group("/ticket"), handler.TicketHandler)
-		routes.TicketOrderRoutes(globalGroup.Group("/ticket-order"), handler.TicketOrderHandler)
+	}
+
+	protectedGroup := router.Group("")
+	protectedGroup.Use(middleware.Authenticate())
+	{
+		routes.TicketOrderRoutes(protectedGroup.Group("/ticket-order"), handler.TicketOrderHandler)
 	}
 
 	db.SetMaxOpenConns(25)

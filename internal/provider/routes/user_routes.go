@@ -10,4 +10,5 @@ func UserRoutes(routerGroup *gin.RouterGroup, userHandler handler.UserHandlerInt
 	routerGroup.GET("/", userHandler.GetAll)
 	routerGroup.GET("/:id", userHandler.FindById)
 	routerGroup.POST("/", userHandler.Save)
+	routerGroup.POST("/login", userHandler.Login)
 }

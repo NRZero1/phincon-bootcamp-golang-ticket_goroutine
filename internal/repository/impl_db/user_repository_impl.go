@@ -42,7 +42,7 @@ func (repo *UserRepository) Save(ctx context.Context, user *domain.User) (error)
 			return err
 		}
 
-		query := `INSERT INTO users (email, name, phone_number, balance) VALUES ($1, $2, $3, $4) RETURNING user_id`
+		query := `INSERT INTO users (email, password, name, phone_number, balance) VALUES ($1, $2, $3, $4, $5) RETURNING user_id`
 		log.Trace().Msg("Query is set")
 
 		stmt, err := trx.PrepareContext(ctx, query)
@@ -54,7 +54,7 @@ func (repo *UserRepository) Save(ctx context.Context, user *domain.User) (error)
 
 		defer stmt.Close()
 
-		errScan := stmt.QueryRowContext(ctx, user.Email, user.Name, user.PhoneNumber, user.Balance).Scan(&user.UserID)
+		errScan := stmt.QueryRowContext(ctx, user.Email, user.Password, user.Name, user.PhoneNumber, user.Balance).Scan(&user.UserID)
 		log.Trace().Msg("Query ran")
 
 		if errScan != nil {
@@ -91,7 +91,7 @@ func (repo *UserRepository) FindByID(ctx context.Context, id int) (domain.User, 
 			return domain.User{}, err
 		}
 
-		query := "SELECT * FROM users WHERE user_id=$1"
+		query := "SELECT user_id, email, name, phone_number, balance FROM users WHERE user_id=$1"
 		log.Trace().Msg("Query is set")
 
 		stmt, err := trx.PrepareContext(ctx, query)
@@ -148,7 +148,7 @@ func (repo *UserRepository) GetAll(ctx context.Context) ([]domain.User, error) {
 			return []domain.User{}, err
 		}
 
-		query := "SELECT * FROM users"
+		query := "SELECT user_id, email, name, phone_number, balance FROM users"
 		log.Trace().Msg("Query is set")
 
 		stmt, err := trx.PrepareContext(ctx, query)
@@ -212,7 +212,7 @@ func (repo *UserRepository) ReduceBalance(ctx context.Context, id int, amount fl
 			return domain.User{}, err
 		}
 
-		query := `UPDATE users SET balance=$1 WHERE user_id=$2 RETURNING *`
+		query := `UPDATE users SET balance=$1 WHERE user_id=$2 RETURNING user_id, email, name, phone_number, balance`
 		log.Trace().Msg("Query is set")
 
 		stmt, err := trx.PrepareContext(ctx, query)
@@ -241,4 +241,51 @@ func (repo *UserRepository) ReduceBalance(ctx context.Context, id int, amount fl
 		log.Info().Msg("Balance reduced successfully")
 		return user, nil
 	}
+}
+
+func (repo *UserRepository) FindByEmail(ctx context.Context, email string) (domain.User, error) {
+	repo.mtx.Lock()
+	defer repo.mtx.Unlock()
+
+	log.Trace().Msg("Attempting to find user by email")
+	trx, err := repo.db.BeginTx(ctx, nil)
+		log.Trace().Msg("Begin transaction")
+
+		if err != nil {
+			return domain.User{}, err
+		}
+
+		query := "SELECT user_id, email, password FROM users WHERE email=$1"
+		log.Trace().Msg("Query is set")
+
+		stmt, err := trx.PrepareContext(ctx, query)
+		log.Trace().Msg("Prepared statement created with context")
+
+		if err != nil {
+			return domain.User{}, err
+		}
+
+		defer stmt.Close()
+
+		var user domain.User
+		errScan := stmt.QueryRowContext(ctx, email).Scan(
+			&user.UserID,
+			&user.Email,
+			&user.Password,
+		)
+
+		if errScan != nil {
+			if errScan == sql.ErrNoRows {
+				log.Error().Msg(fmt.Sprintf("User with email %s not found", email))
+				return domain.User{}, fmt.Errorf("no user found with email %s", email)
+			}
+			return domain.User{}, errScan
+		}
+
+		if err = trx.Commit(); err != nil {
+			return domain.User{}, err
+		}
+
+		log.Info().Msg("User repo find by email completed")
+		return user, nil
 }
